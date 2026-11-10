@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { usePersistentState } from './usePersistentState';
 import { STORAGE_KEYS } from '../utils/storage';
 import { reviveComponents, MAX_COMPONENTS } from '../utils/reviveComponents';
@@ -18,6 +18,8 @@ interface UseComponentGeneratorReturn {
   streamingCode: string | null;
   streamingPrompt: string | null;
   generate: (prompt: string, apiKey: string | undefined, provider: Provider) => Promise<boolean>;
+  /** 진행 중인 생성을 중단한다. */
+  cancel: () => void;
   removeComponent: (id: string) => void;
   clearAll: () => void;
 }
@@ -33,6 +35,7 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
   const [streamingCode, setStreamingCode] = useState<string | null>(null);
   const [streamingPrompt, setStreamingPrompt] = useState<string | null>(null);
   const inFlight = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const generate = useCallback(async (prompt: string, apiKey: string | undefined, provider: Provider): Promise<boolean> => {
     // 진행 중 재진입을 막아 두 호출이 서로의 스트리밍 상태를 덮어쓰지 않게 한다.
@@ -45,11 +48,17 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
     setStreamingCode('');
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
+    // cancel()과 언마운트가 요청과 응답 스트림을 함께 중단한다.
+    const controller = new AbortController();
+    abortRef.current = controller;
+    controller.signal.addEventListener('abort', () => void reader?.cancel().catch(() => {}));
+
     try {
       const res = await fetch('/api/generate/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, ...(apiKey && { apiKey }), provider }),
+        signal: controller.signal,
       });
 
       if (!res.ok || !res.body) {
@@ -78,10 +87,17 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        const { events, rest } = splitNdjson(buffer);
-        buffer = rest;
-        (events as StreamEvent[]).forEach(handle);
+        let parsed: ReturnType<typeof splitNdjson>;
+        try {
+          parsed = splitNdjson(buffer);
+        } catch {
+          throw new Error('응답 형식이 올바르지 않습니다. 다시 시도해주세요.');
+        }
+        buffer = parsed.rest;
+        (parsed.events as StreamEvent[]).forEach(handle);
       }
+
+      if (controller.signal.aborted) return false;
 
       if (finalCode === null) {
         throw new Error('응답이 중간에 끊어졌습니다. 다시 시도해주세요.');
@@ -94,13 +110,19 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
         createdAt: new Date(),
       };
 
+      // 스트리밍 카드를 걷어내는 것과 새 카드를 추가하는 것을 한 번에 반영해 두 카드가 동시에 보이지 않게 한다.
+      setStreamingCode(null);
+      setStreamingPrompt(null);
       setComponents((prev) => [newComponent, ...prev].slice(0, MAX_COMPONENTS));
       return true;
     } catch (err) {
+      // 사용자가 중단한 경우는 에러로 보여주지 않는다.
+      if (controller.signal.aborted) return false;
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
       return false;
     } finally {
+      abortRef.current = null;
       await reader?.cancel().catch(() => {});
       inFlight.current = false;
       setIsLoading(false);
@@ -108,6 +130,12 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
       setStreamingPrompt(null);
     }
   }, [setComponents]);
+
+  const cancel = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const removeComponent = useCallback((id: string) => {
     setComponents((prev) => prev.filter((c) => c.id !== id));
@@ -117,5 +145,5 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
     setComponents([]);
   }, [setComponents]);
 
-  return { components, isLoading, error, streamingCode, streamingPrompt, generate, removeComponent, clearAll };
+  return { components, isLoading, error, streamingCode, streamingPrompt, generate, cancel, removeComponent, clearAll };
 }

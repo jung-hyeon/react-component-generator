@@ -29,7 +29,7 @@ function App() {
     anthropic: false,
     google: false,
   });
-  const { components, isLoading, error, streamingCode, streamingPrompt, generate, removeComponent, clearAll } =
+  const { components, isLoading, error, streamingCode, streamingPrompt, generate, cancel, removeComponent, clearAll } =
     useComponentGenerator();
 
   useEffect(() => {
@@ -156,7 +156,7 @@ function App() {
 
         <div className="results-grid">
           {isLoading && streamingCode !== null && (
-            <StreamingCard prompt={streamingPrompt ?? ''} code={streamingCode} />
+            <StreamingCard prompt={streamingPrompt ?? ''} code={streamingCode} onCancel={cancel} />
           )}
           {components.map((component) => (
             <ComponentCard

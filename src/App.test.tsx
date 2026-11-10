@@ -51,6 +51,35 @@ describe('App 스트리밍 UX', () => {
       expect(screen.getByRole('tab', { name: '미리보기' })).toHaveAttribute('aria-selected', 'true'),
     );
   });
+
+  it('생성 중 중단 버튼을 누르면 스트리밍 카드가 사라지고 에러 없이 히스토리에도 저장되지 않는다', async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('{"type":"delta","text":"const Btn"}\n'));
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url === '/api/config'
+          ? Response.json({ envKeys: { anthropic: false, google: false } })
+          : new Response(stream),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText('API 키'), 'AIza-test');
+    await user.type(screen.getByRole('textbox'), '버튼');
+    await user.click(screen.getByRole('button', { name: '컴포넌트 생성' }));
+    await screen.findByText('const Btn');
+
+    await user.click(screen.getByRole('button', { name: '생성 중단' }));
+
+    await waitFor(() => expect(screen.queryByLabelText('컴포넌트 생성 중')).not.toBeInTheDocument());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('rcg:history') ?? '[]')).toEqual([]);
+  });
 });
 
 describe('App 영속성', () => {

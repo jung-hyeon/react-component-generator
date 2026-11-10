@@ -596,3 +596,25 @@
     padding: 18px;
   }
 }
+
+.prompt-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.prompt-counter {
+  color: var(--ink-soft);
+}
+
+.prompt-counter--over,
+.prompt-error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.prompt-meta .prompt-error {
+  margin: 0;
+}

@@ -531,6 +531,22 @@
   line-height: 1.7;
 }
 
+.code-block--streaming {
+  max-height: 480px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.caret--light {
+  background: #e8ebf7;
+}
+
+.tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 /* ---------- responsive ---------- */
 
 @media (max-width: 960px) {

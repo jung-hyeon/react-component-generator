@@ -1,6 +1,15 @@
 // AI 응답 텍스트를 react-live에서 실행 가능한 코드로 정규화하는 순수 함수들.
 // 부수효과(Bun.serve 등)가 없어 단위 테스트가 가능하다.
 
+/** 전체 응답 텍스트를 최종 코드로 만든다. 응답이 비어 있으면 에러를 던진다. */
+export function finalizeCode(text: string): string {
+  const code = stripCodeFences(text);
+  if (code === '') {
+    throw new Error('생성된 코드가 비어 있습니다. 다시 시도해주세요.');
+  }
+  return ensureRenderCall(code);
+}
+
 /** 응답에 섞여 나온 마크다운 코드펜스(```)를 제거한다. */
 export function stripCodeFences(text: string): string {
   return text

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { ComponentCard } from './components/ComponentCard';
+import { StreamingCard } from './components/StreamingCard';
 import { useComponentGenerator } from './hooks/useComponentGenerator';
 import { usePersistentState } from './hooks/usePersistentState';
 import { STORAGE_KEYS } from './utils/storage';
@@ -28,7 +29,7 @@ function App() {
     anthropic: false,
     google: false,
   });
-  const { components, isLoading, error, generate, removeComponent, clearAll } =
+  const { components, isLoading, error, streamingCode, streamingPrompt, generate, removeComponent, clearAll } =
     useComponentGenerator();
 
   useEffect(() => {
@@ -153,16 +154,10 @@ function App() {
           </div>
         )}
 
-        {isLoading && (
-          <div className="loading-card" role="status">
-            <p>컴포넌트를 생성하고 있습니다...</p>
-            <div className="progress" aria-hidden="true">
-              <span className="progress-fill" />
-            </div>
-          </div>
-        )}
-
         <div className="results-grid">
+          {isLoading && streamingCode !== null && (
+            <StreamingCard prompt={streamingPrompt ?? ''} code={streamingCode} />
+          )}
           {components.map((component) => (
             <ComponentCard
               key={component.id}

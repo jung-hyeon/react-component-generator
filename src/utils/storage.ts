@@ -1,5 +1,4 @@
 export const STORAGE_KEYS = {
-  apiKey: 'rcg:apiKey',
   provider: 'rcg:provider',
   history: 'rcg:history',
   components: 'rcg:components',

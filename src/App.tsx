@@ -24,7 +24,8 @@ function reviveHistory(raw: unknown): string[] {
 }
 
 function App() {
-  const [apiKey, setApiKey] = usePersistentState(STORAGE_KEYS.apiKey, '');
+  // API 키는 XSS와 생성 코드의 접근 위험 때문에 저장하지 않는다.
+  const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [provider, setProvider] = usePersistentState<Provider>(STORAGE_KEYS.provider, 'google', reviveProvider);
   const [history, setHistory] = usePersistentState<string[]>(STORAGE_KEYS.history, [], reviveHistory);

@@ -53,3 +53,18 @@ describe('PromptInput', () => {
     expect(screen.getByText('2/500')).toBeInTheDocument();
   });
 });
+
+describe('PromptInput 히스토리', () => {
+  it('히스토리가 있으면 항목을 보여주고 클릭하면 입력창에 채운다', async () => {
+    const user = userEvent.setup();
+    render(<PromptInput onGenerate={vi.fn()} isLoading={false} history={['이전 프롬프트']} />);
+
+    await user.click(screen.getByRole('button', { name: '이전 프롬프트' }));
+    expect(screen.getByRole('textbox')).toHaveValue('이전 프롬프트');
+  });
+
+  it('히스토리가 비어 있으면 최근 프롬프트 영역을 숨긴다', () => {
+    render(<PromptInput onGenerate={vi.fn()} isLoading={false} history={[]} />);
+    expect(screen.queryByText('최근 프롬프트')).not.toBeInTheDocument();
+  });
+});

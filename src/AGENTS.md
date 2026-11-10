@@ -26,7 +26,7 @@ Vite + React 19 프론트엔드. `/api/*`는 Vite 프록시를 거쳐 `server/`�
 
 - 미리보기 새로고침은 `LivePreview`의 `key`를 바꿔 리마운트하는 방식이다 (`components/ComponentCard.tsx:33,70`). 애니메이션 초기화가 목적이므로 `key` 제거나 상태 리셋 방식으로 바꾸지 않는다.
 - 재생성은 프롬프트 문자열만 `App`의 `handleGenerate`로 넘긴다 (`ComponentCard.tsx:41`, `App.tsx:113-119`). API 키와 공급자는 `App`이 단일 출처이므로 카드 안에서 따로 보관하지 않는다.
-- API 키 입력은 `type="password"` 기본값이고 공급자를 바꾸면 입력값을 비운다 (`App.tsx:121-124,172`). 키를 `localStorage` 등 영구 저장소에 넣지 않는다.
+- API 키 입력은 `type="password"` 기본값이고 공급자를 바꾸면 입력값을 비운다. API 키, Provider, 프롬프트 히스토리, 생성된 컴포넌트 목록은 `usePersistentState`로 `localStorage`에 저장한다 (키 이름은 `utils/storage.ts`의 `STORAGE_KEYS`). 저장소 접근은 `utils/storage.ts`를 통해서만 하고, 저장된 값은 `revive` 함수로 검증한다. API 키 외의 민감 값은 저장하지 않는다.
 - 키 사용 여부는 `/api/config`의 boolean으로만 판단한다 (`App.tsx:105-111`). 서버 키 값을 받아 오는 방식으로 바꾸지 않는다.
 - `Provider` 타입이 `types/index.ts:1`과 `server/index.ts:57`에 중복 정의되어 있다. 값을 추가할 때 두 곳을 함께 수정한다.
 - 에러는 `useComponentGenerator`의 `error` 상태로 모아 `App`의 배너 한 곳에서 표시한다 (`hooks/useComponentGenerator.ts:63-65`, `App.tsx:197`). 컴포넌트별로 별도 alert을 늘리지 않는다.

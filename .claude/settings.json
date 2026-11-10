@@ -1,5 +1,100 @@
 {
   "worktree": {
     "baseRef": "head"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Edit(src/**)",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"[TDD 리마인더] .claude/rules/tdd.md는 Rigid 규칙이다. 코드를 작성하거나 수정하기 전에 확인하라. (1) 비즈니스 로직, API, 유틸리티, 버그 수정이면 프로덕션 코드보다 실패하는 테스트를 먼저 쓰고, 실행해서 RED(실패 이유가 기능 미구현)를 확인한다. (2) GREEN은 테스트를 통과시키는 최소 코드만 쓰고, 신규와 기존 테스트를 모두 실행한다. (3) 테스트보다 프로덕션 코드를 먼저 썼다면 그 코드를 삭제하고 RED부터 다시 시작한다. 주석 처리나 별도 보관도 금지다. (4) 한 사이클이 끝나기 전에 다음 동작을 구현하지 않는다. 순수 UI, 타입 정의, 설정 파일만 예외이며 애매하면 적용 대상으로 본다.\"}}'"
+          },
+          {
+            "type": "command",
+            "if": "Edit(server/**)",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"[TDD 리마인더] .claude/rules/tdd.md는 Rigid 규칙이다. 코드를 작성하거나 수정하기 전에 확인하라. (1) 비즈니스 로직, API, 유틸리티, 버그 수정이면 프로덕션 코드보다 실패하는 테스트를 먼저 쓰고, 실행해서 RED(실패 이유가 기능 미구현)를 확인한다. (2) GREEN은 테스트를 통과시키는 최소 코드만 쓰고, 신규와 기존 테스트를 모두 실행한다. (3) 테스트보다 프로덕션 코드를 먼저 썼다면 그 코드를 삭제하고 RED부터 다시 시작한다. 주석 처리나 별도 보관도 금지다. (4) 한 사이클이 끝나기 전에 다음 동작을 구현하지 않는다. 순수 UI, 타입 정의, 설정 파일만 예외이며 애매하면 적용 대상으로 본다.\"}}'"
+          },
+          {
+            "type": "command",
+            "if": "Write(src/**)",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"[TDD 리마인더] .claude/rules/tdd.md는 Rigid 규칙이다. 코드를 작성하거나 수정하기 전에 확인하라. (1) 비즈니스 로직, API, 유틸리티, 버그 수정이면 프로덕션 코드보다 실패하는 테스트를 먼저 쓰고, 실행해서 RED(실패 이유가 기능 미구현)를 확인한다. (2) GREEN은 테스트를 통과시키는 최소 코드만 쓰고, 신규와 기존 테스트를 모두 실행한다. (3) 테스트보다 프로덕션 코드를 먼저 썼다면 그 코드를 삭제하고 RED부터 다시 시작한다. 주석 처리나 별도 보관도 금지다. (4) 한 사이클이 끝나기 전에 다음 동작을 구현하지 않는다. 순수 UI, 타입 정의, 설정 파일만 예외이며 애매하면 적용 대상으로 본다.\"}}'"
+          },
+          {
+            "type": "command",
+            "if": "Write(server/**)",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"[TDD 리마인더] .claude/rules/tdd.md는 Rigid 규칙이다. 코드를 작성하거나 수정하기 전에 확인하라. (1) 비즈니스 로직, API, 유틸리티, 버그 수정이면 프로덕션 코드보다 실패하는 테스트를 먼저 쓰고, 실행해서 RED(실패 이유가 기능 미구현)를 확인한다. (2) GREEN은 테스트를 통과시키는 최소 코드만 쓰고, 신규와 기존 테스트를 모두 실행한다. (3) 테스트보다 프로덕션 코드를 먼저 썼다면 그 코드를 삭제하고 RED부터 다시 시작한다. 주석 처리나 별도 보관도 금지다. (4) 한 사이클이 끝나기 전에 다음 동작을 구현하지 않는다. 순수 UI, 타입 정의, 설정 파일만 예외이며 애매하면 적용 대상으로 본다.\"}}'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "bun run test >&2 || { echo '테스트 실패: 모든 테스트가 통과해야 커밋할 수 있습니다.' >&2; exit 2; }",
+            "timeout": 180,
+            "statusMessage": "커밋 전 테스트 실행 중..."
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Read(**/id_rsa*)",
+      "Read(**/id_ed25519*)",
+      "Read(**/*credential*)",
+      "Read(**/*secret*)",
+      "Read(**/.npmrc)",
+      "Read(**/.netrc)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gcloud/**)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.key)",
+      "Edit(**/*.p12)",
+      "Edit(**/*.pfx)",
+      "Edit(**/id_rsa*)",
+      "Edit(**/id_ed25519*)",
+      "Edit(**/*credential*)",
+      "Edit(**/*secret*)",
+      "Edit(**/.npmrc)",
+      "Edit(**/.netrc)",
+      "Edit(~/.ssh/**)",
+      "Edit(~/.aws/**)",
+      "Edit(~/.config/gcloud/**)",
+      "Bash(*.env*)",
+      "Bash(*credential*)",
+      "Bash(*secret*)",
+      "Bash(*.pem*)",
+      "Bash(*id_rsa*)",
+      "Bash(*id_ed25519*)",
+      "Bash(*.ssh/*)",
+      "Bash(*.aws/*)",
+      "Bash(printenv*)",
+      "Bash(env)",
+      "Bash(git add .env*)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(yarn *)",
+      "Bash(pnpm *)",
+      "Bash(bun test*)",
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)"
+    ]
   }
 }

@@ -46,6 +46,26 @@ describe('App 영속성', () => {
     expect(JSON.parse(localStorage.getItem('rcg:provider')!)).toBe('anthropic');
   });
 
+  it('생성에 실패한 프롬프트는 히스토리에 저장하지 않는다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url === '/api/config'
+          ? Response.json({ envKeys: { anthropic: false, google: false } })
+          : Response.json({ error: 'fail' }, { status: 500 }),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText('API 키'), 'AIza-test');
+    await user.type(screen.getByRole('textbox'), '실패할 프롬프트');
+    await user.click(screen.getByRole('button', { name: '컴포넌트 생성' }));
+
+    await screen.findByRole('alert');
+    expect(JSON.parse(localStorage.getItem('rcg:history') ?? '[]')).toEqual([]);
+  });
+
   it('생성 요청한 프롬프트가 히스토리에 저장된다', async () => {
     const user = userEvent.setup();
     render(<App />);

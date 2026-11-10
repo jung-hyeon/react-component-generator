@@ -4,7 +4,7 @@ import { ComponentCard } from './components/ComponentCard';
 import { useComponentGenerator } from './hooks/useComponentGenerator';
 import { usePersistentState } from './hooks/usePersistentState';
 import { STORAGE_KEYS } from './utils/storage';
-import { addToHistory } from './utils/history';
+import { addToHistory, reviveHistory } from './utils/history';
 import type { Provider } from './types';
 import './App.css';
 
@@ -16,11 +16,6 @@ const PROVIDER_CONFIG = {
 function reviveProvider(raw: unknown): Provider {
   if (raw === 'anthropic' || raw === 'google') return raw;
   throw new Error('저장된 Provider 값이 올바르지 않습니다.');
-}
-
-function reviveHistory(raw: unknown): string[] {
-  if (!Array.isArray(raw)) throw new Error('저장된 히스토리 형식이 올바르지 않습니다.');
-  return raw.filter((item): item is string => typeof item === 'string');
 }
 
 function App() {
@@ -45,13 +40,15 @@ function App() {
 
   const hasEnvKey = envKeys[provider];
 
-  const handleGenerate = (prompt: string) => {
+  const handleGenerate = async (prompt: string) => {
     if (!apiKey.trim() && !hasEnvKey) {
       alert(`${PROVIDER_CONFIG[provider].label} API 키를 입력하거나 .env에 설정해주세요.`);
       return;
     }
-    setHistory((prev) => addToHistory(prev, prompt));
-    generate(prompt, apiKey || undefined, provider);
+    const succeeded = await generate(prompt, apiKey || undefined, provider);
+    if (succeeded) {
+      setHistory((prev) => addToHistory(prev, prompt));
+    }
   };
 
   const handleProviderChange = (newProvider: Provider) => {

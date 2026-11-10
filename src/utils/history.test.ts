@@ -1,5 +1,30 @@
 import { describe, it, expect } from 'vitest';
-import { addToHistory, MAX_HISTORY } from './history';
+import { addToHistory, reviveHistory, MAX_HISTORY } from './history';
+
+describe('reviveHistory', () => {
+  it('문자열이 아닌 항목은 제외한다', () => {
+    expect(reviveHistory(['a', 1, null, 'b'])).toEqual(['a', 'b']);
+  });
+
+  it('공백을 제거하고 빈 문자열은 제외한다', () => {
+    expect(reviveHistory(['  a  ', '   ', ''])).toEqual(['a']);
+  });
+
+  it('중복은 처음 나온 항목만 남긴다', () => {
+    expect(reviveHistory(['a', 'b', 'a'])).toEqual(['a', 'b']);
+  });
+
+  it('최대 개수를 넘으면 앞쪽(최신)부터 MAX_HISTORY개만 남긴다', () => {
+    const many = Array.from({ length: MAX_HISTORY + 5 }, (_, i) => `p${i}`);
+    const result = reviveHistory(many);
+    expect(result).toHaveLength(MAX_HISTORY);
+    expect(result[0]).toBe('p0');
+  });
+
+  it('배열이 아니면 예외를 던진다', () => {
+    expect(() => reviveHistory('x')).toThrow();
+  });
+});
 
 describe('addToHistory', () => {
   it('새 프롬프트를 맨 앞에 추가한다', () => {

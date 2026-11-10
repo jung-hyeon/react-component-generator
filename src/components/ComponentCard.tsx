@@ -51,15 +51,19 @@ export function ComponentCard({ component, onRemove, onRegenerate, isLoading }: 
           </button>
         </div>
       </div>
-      <div className="card-tabs">
+      <div className="card-tabs" role="tablist">
         <button
           className={`tab ${activeTab === 'preview' ? 'tab--active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'preview'}
           onClick={() => setActiveTab('preview')}
         >
           미리보기
         </button>
         <button
           className={`tab ${activeTab === 'code' ? 'tab--active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'code'}
           onClick={() => setActiveTab('code')}
         >
           코드

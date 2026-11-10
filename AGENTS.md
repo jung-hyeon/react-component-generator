@@ -17,6 +17,8 @@
 - API 키를 클라이언트 번들, 응답 본문, 로그에 노출하지 않는다. `/api/config`는 키 존재 여부(boolean)만 반환한다 (`server/index.ts:147-156`). 키 값 자체를 반환하도록 바꾸지 않는다.
 - Google 호출은 API 키가 URL 쿼리에 들어간다 (`server/index.ts:99`). 이 URL을 로그나 에러 메시지에 포함하지 않는다.
 - `.env`는 커밋하지 않는다 (`.gitignore`).
+- 민감 파일은 읽기·수정·내용 출력을 모두 금지한다. 대상: `.env`, `.env.*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `id_rsa*`, `id_ed25519*`, 이름에 `credential`/`secret`이 들어간 파일, `.npmrc`, `.netrc`, `~/.ssh`, `~/.aws`, `~/.config/gcloud`. `.claude/settings.json`의 `permissions.deny`가 Read/Edit/Bash 경로에서 이를 차단한다. 차단된 파일을 다른 도구나 셸 우회(`cat`, `type`, `printenv` 등)로 열지 않는다. 환경 변수 값이 필요하면 사용자에게 요청한다.
+- 민감 파일 규칙(`permissions.deny`)을 임의로 완화하거나 제거하지 않는다. 변경이 필요하면 사용자에게 먼저 확인한다.
 
 ### Hard Constraints
 

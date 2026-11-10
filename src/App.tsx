@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { ComponentCard } from './components/ComponentCard';
+import { StreamingCard } from './components/StreamingCard';
 import { useComponentGenerator } from './hooks/useComponentGenerator';
 import { usePersistentState } from './hooks/usePersistentState';
 import { STORAGE_KEYS } from './utils/storage';
-import { addToHistory } from './utils/history';
+import { addToHistory, reviveHistory } from './utils/history';
 import type { Provider } from './types';
 import './App.css';
 
@@ -18,11 +19,6 @@ function reviveProvider(raw: unknown): Provider {
   throw new Error('저장된 Provider 값이 올바르지 않습니다.');
 }
 
-function reviveHistory(raw: unknown): string[] {
-  if (!Array.isArray(raw)) throw new Error('저장된 히스토리 형식이 올바르지 않습니다.');
-  return raw.filter((item): item is string => typeof item === 'string');
-}
-
 function App() {
   // API 키는 XSS와 생성 코드의 접근 위험 때문에 저장하지 않는다.
   const [apiKey, setApiKey] = useState('');
@@ -33,7 +29,7 @@ function App() {
     anthropic: false,
     google: false,
   });
-  const { components, isLoading, error, generate, removeComponent, clearAll } =
+  const { components, isLoading, error, streamingCode, streamingPrompt, generate, removeComponent, clearAll } =
     useComponentGenerator();
 
   useEffect(() => {
@@ -45,13 +41,15 @@ function App() {
 
   const hasEnvKey = envKeys[provider];
 
-  const handleGenerate = (prompt: string) => {
+  const handleGenerate = async (prompt: string) => {
     if (!apiKey.trim() && !hasEnvKey) {
       alert(`${PROVIDER_CONFIG[provider].label} API 키를 입력하거나 .env에 설정해주세요.`);
       return;
     }
-    setHistory((prev) => addToHistory(prev, prompt));
-    generate(prompt, apiKey || undefined, provider);
+    const succeeded = await generate(prompt, apiKey || undefined, provider);
+    if (succeeded) {
+      setHistory((prev) => addToHistory(prev, prompt));
+    }
   };
 
   const handleProviderChange = (newProvider: Provider) => {
@@ -156,16 +154,10 @@ function App() {
           </div>
         )}
 
-        {isLoading && (
-          <div className="loading-card" role="status">
-            <p>컴포넌트를 생성하고 있습니다...</p>
-            <div className="progress" aria-hidden="true">
-              <span className="progress-fill" />
-            </div>
-          </div>
-        )}
-
         <div className="results-grid">
+          {isLoading && streamingCode !== null && (
+            <StreamingCard prompt={streamingPrompt ?? ''} code={streamingCode} />
+          )}
           {components.map((component) => (
             <ComponentCard
               key={component.id}
